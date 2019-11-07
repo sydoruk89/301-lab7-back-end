@@ -28,36 +28,40 @@ app.get('*', (request, response) => {
 
 // Location handler
 function locationHandler(request, response) {
-  try{
+  try {
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${request.query.data}&key=${process.env.GEOCODE_API_KEY}`;
     superagent.get(url)
-      .then( data => {
+      .then(data => {
         const geoData = data.body;
         const location = (new Location(request.query.data, geoData));
         response.status(200).send(location);
       });
   }
-  catch(error){
+  catch (error) {
     //some function or error message
     errorHandler('So sorry, something went wrong', request, response);
   }
 }
 
 //API routes
-app.get('/weather', (request, response) => {
-  try {
-    const weatherArr = [];
-    const darkSkyData = require('./data/darksky.json');
-    darkSkyData.daily.data.forEach( day => {
-      weatherArr.push(new Weather(day.summary, new Date(day.time * 1000).toString().slice(0, 15)));
+function weatherHandler(request, response) {
+  const url = `https://api.darksky.net/forecast/${process.env.WEATHER_API_KEY}/${request.query.data.latitude},${request.query.data.longitude}`;
+  // console.log('lat/long', request.query.data.latitude);
+  superagent.get(url)
+    .then(data => {
+      const weatherSummaries = data.body.daily.data.map(day => {
+        return new Weather(day);
+      });
+      response.status(200).send(weatherSummaries);
+    })
+    .catch(() => {
+      errorHandler('Something went wrong', request, response);
     });
-    response.send(weatherArr);
-  }
-  catch (error) {
-    //some function or error message
-    errorHandler('So sorry, something went wrong', request, response);
-  }
-});
+}
+
+function errorHandler(error, request, response) {
+  response.status(500).send(error);
+}
 
 //Helper Funcitons
 function Location(city, geoData) {
@@ -68,16 +72,10 @@ function Location(city, geoData) {
 }
 
 //Helper Funcitons
-function Weather(forecast, time) {
-  this.forecast = forecast;
-  this.time = time;
+function Weather(day) {
+  this.forecast = day.summary;
+  this.time = new Date(day.time * 1000).toString().slice(0, 15);
 }
-
-function errorHandler(error, request, response) {
-  response.status(500).send(error);
-}
-
-
 
 // //Ensure the server is listening for requests
 // // THIS MUST BE AT THE BOTTOM OF THE FILE!!!!
