@@ -64,8 +64,8 @@ function getTrails(request, response) {
   // console.log('lat/long', request.query.data.latitude);
   superagent.get(url)
     .then(data => {
-      const trailsSummaries = data.body.trails.map(trail => {
-        return new Trail(trail);
+      const trailsSummaries = data.body.trails.map(element => {
+        return new Trails(element);
       });
       response.status(200).send(trailsSummaries);
     })
@@ -95,13 +95,17 @@ function Weather(day) {
 }
 
 // trails constructor
-
-function Trail(trail){
+function Trails(trail){
   this.name = trail.name;
   this.location = trail.location;
-  this.distance = trail.length;
-  this.condition = trail.conditionStatus;
-  this.rating = trail.stars;
+  this.length = trail.length;
+  this.stars = trail.stars;
+  this.star_votes = trail.starVotes;
+  this.summary = trail.summary;
+  this.trail_url = trail.url;
+  this.conditions = trail.conditionStatus;
+  this.condition_date = trail.conditionDate.slice(0, 10);
+  this.condition_time = trail.conditionDate.slice(11);
 }
 // //Ensure the server is listening for requests
 // // THIS MUST BE AT THE BOTTOM OF THE FILE!!!!
